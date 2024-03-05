@@ -1,0 +1,81 @@
+version: '3.3'
+services:
+  # Simple Tyk install with minimal settings
+  tyk:
+    image: docker.tyk.io/tyk-gateway/tyk-gateway:v5.2.5
+    ports:
+      - "8080:8080"
+    networks:
+      - tyk
+    environment:
+      - TYK_GW_SECRET=not_a_secret
+      - TYK_GW_LOGLEVEL=info # All the logs!
+      - TYK_GW_PROXYSSLINSECURESKIPVERIFY=1 # enable self signed certs
+      - TYK_SECRET_TEST_URL=https://jsonplaceholder.typicode.com/todos/ # values to read via env://
+      - TYK_SECRET_TEST_CLIENT_CERT=-----BEGIN%20PRIVATE%20KEY-----%0AMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCZRL4fnZ4hpyA1%0AKKuKi4QP1RTazigYon3xONDJQGwxonKO3p5oZSUbtNqSH1uvmVp2Vv9eJUXUtpGO%0AgqVc7vlwAZbh8XOAH%2Bpl3tTyFWkbQwY9x7MiKVrGQWu6LT7KJ9UasFi%2BBGNFKP%2BQ%0AKJvrHN2NFFaBJsYDPTwfYteyNMixQQHGDAOWr2vsyp0j0hJ2MGGUeXf69obq6mCD%0AN5sqCI2ooPkbhMB9hOF9tNabDXU4Xnh%2FQTOfJa5%2B3QFBfWbgJ2Nx7tu4XsorTCuH%0AL9JF23TGopzWHpA6WNgWYzSJL0tegO5gOY%2Fp2wgEOmgiu0dXPWeD2m6rfEq3vcws%0A%2FNoMRpp5AgMBAAECggEAFCt0O7Ph2frk5an%2B%2FSIEFJNNhcfoheloWoTIERv9wQBo%0AQ%2F3u6b0Zx44iz2T6C19KhNVJEOolyOrnt9HgkhzOzZsf8Ib2VK%2BeiJ5s9piztsc4%0AvIuZus6nZ%2Fy3AQ6wOylHxZXcb9EjATh2fVGixyuKymSZR7DDES0PSvAWg5inqo%2B3%0AxqVlCoctrnqUOu1CmqXy79PH1xVKzAlL%2BNLtr5TbFD7S5YrnXG5O3JiagpUH4RHv%0A0OVgBlrEqrlV8Tq8nRev2RyaaXmfXRRjoG8vDc5pXfuIiGZmC0lReyJKFxetBE3B%0Ao%2FgerGIPn9t%2B%2B8DtScn8BTNvqAb3O0j2zl%2F%2FIStfSQKBgQDRBim5WPlhsmXXvv%2BI%0A9wQDRe1bGVnW0CENgkLeLFS%2B9X3m4eavp%2Bk5Wbe5uILFFrmd4olDrymZW%2Fu%2BXkMg%0Aj1D8gCjv8nL66ywTwd7S4hlb6jKUjl89xb5vSMCKRJTfAKjFd%2F0a4j8dS4rvLpcu%0AV%2FpijKUPTpd6GDgNDos1RO%2FEtQKBgQC7tsf0quhroLe2s10Uvevdbi7Mugp1cQb5%0ArzKNdB75Antyn8q2MBORI6Iw5ohrHaCc2NmwZPiYHLh8pgfztqBDJyEqW27KQfzl%0Azgx9aJzEB9J1130dt%2BX5XD0gz2CsCXZyBjVI1PLBASrecmZZPULga6fdFfaDWeU7%0A0kxgbcz9NQKBgQCmqMFP1U9RxEpLkTBx5nI%2Body0jCwDiQMxoDDssHAJqfduxaOH%0AXtwoLA6%2FeAxcVNg%2BuMc1Pk5uxtacXNAs%2F9hU22LInolq42PLhQLDJh%2BOF9eodzQd%0ALrO%2BS0WpeTEx9XabrCYU71vfYcIvHvjPrLopJXbeE43XfcQDNRttp799GQKBgHMO%0Ag91Z7IAb0L9xjTordykQYismVUbK8sWUN14wsNNcTCJkAzJMoZGyz7U9eJx%2FWnUJ%0ADdVq7lz%2BLa5pbjJZ3D2M%2FG0kAfKDI%2BoPs%2BQifQRC7yM%2F4%2FaVQ6bmfKlhsxV%2F71PQ%0ArlRoAit%2B9bHHWSiVviokko2W6rR0I2fZbOsmIiGJAoGBAIVVOnVjJtP1MvwDnSHW%0AFfl6Caxh5EVnRu3frTI9%2FUJtXqaf5c%2FGc3HW5L6KhRDjwfLrX%2BWwiqjkbSzPxwr2%0AVuV1xXU2gkVy4KKs1AtFNls4iUDp%2FctPrOa0fogXyGHl46pBlCQUoa4knMjAYEeu%0Az7EXPjwbTbP3Z8ZW%2FF9hwka9%0A-----END%20PRIVATE%20KEY-----%0A
+    volumes:
+      - ./tyk/tyk.conf:/opt/tyk-gateway/tyk.conf
+      - ./tyk/apps:/opt/tyk-gateway/apps/
+      - ./certs:/certs
+    depends_on:
+      - redis
+      - vault
+      - vault-preloader
+  redis:
+    image: redis:6.2.7-alpine
+    networks:
+      - tyk
+    ports:
+      - "6379:6379"
+    volumes:
+    - redis-data:/data
+
+  # Dev mode vault container to store our secrets
+  vault:
+    image: hashicorp/vault
+    networks:
+      - tyk
+    ports:
+      - "8200:8200"
+    cap_add:
+      - IPC_LOCK
+    environment:
+      VAULT_DEV_ROOT_TOKEN_ID: root-token
+      VAULT_TOKEN: root-token
+      VAULT_DEV_LISTEN_ADDRESS: 0.0.0.0:8200
+      VAULT_ADDR: http://127.0.0.1:8200
+    command:
+      vault server -dev
+
+  # Another vault container to load the needed secrets on every startup
+  vault-preloader:
+    image: hashicorp/vault
+    networks:
+      - tyk
+    environment:
+      VAULT_TOKEN: root-token
+      VAULT_ADDR: http://vault:8200
+    volumes:
+      - ./vault/load.sh:/entrypoint.sh
+      - ./certs:/certs
+    entrypoint: /entrypoint.sh
+    depends_on:
+     - vault
+
+  # Demo server to act as backend and request mTLS certs
+  nginx:
+    image: nginx:latest
+    ports:
+      - "443:443"
+    networks:
+      - tyk
+    volumes:
+      - ./mTLS-web/nginx.conf:/etc/nginx/nginx.conf
+      - ./mTLS-web/index.html:/etc/nginx/html/index.html
+      - ./certs:/certs
+
+volumes:
+  redis-data:
+
+networks:
+  tyk:
