@@ -27,7 +27,7 @@ curl http://localhost:8080/test2/1 # Reads target_url from env secret
 
 However, you will notice when hitting `test` that Tyk kicks out this log: 
 ```
-tyk-1            | time="Mar 05 21:09:09" level=warning msg="Can't retrieve certificate:vault://secret/tyk.combinedopen vault://secret/tyk.combined: no such file or directory" prefix=cert_storage
+tyk-1            | time="Mar 05 21:09:09" level=warning msg="Can't retrieve certificate:vault://secret/tyk.certopen vault://secret/tyk.cert: no such file or directory" prefix=cert_storage
 ```
 
 You can switch the `*.env` and `*` settings in `security.certificates.upstream` to try to read this from `env://` (as works for `target_url`) and you will see a matching error:
