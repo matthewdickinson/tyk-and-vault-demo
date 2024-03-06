@@ -15,7 +15,8 @@ You can see this by booting this sample application:
 ```bash
 docker compose up
 ```
-Note: You might need to stop the containers and restart if Docker decides to boot Tyk before the `vault_preloader` finishes.
+> [!WARNING]  
+> Note: You might need to stop the containers and restart if Docker decides to boot Tyk before the `vault_preloader` finishes.
 
 You can see that this now responds to requests:
 ```bash
